@@ -345,7 +345,7 @@ async function main () {
     require('process').exit(1);
   }
 
-  var hasEmptyCrunchbase = false;
+  /* var hasEmptyCrunchbase = false;
   await Promise.mapSeries(itemsWithExtraFields, async function(item) {
     if (!item.crunchbaseData) {
       hasEmptyCrunchbase = true;
@@ -367,7 +367,7 @@ async function main () {
   if (hasBadCrunchbase) {
     await reportFatalErrors();
     require('process').exit(1);
-  }
+  } */
 
   var hasBadHomepage = false;
   await Promise.mapSeries(itemsWithExtraFields, async function(item) {
@@ -531,23 +531,23 @@ async function main () {
       if (directMembership) {
         return directMembership;
       }
-      const parentWithMembership = _.find(item.crunchbaseData.parents, function(parent) {
-        return _.findKey(members, (v) => v && v.indexOf(parent) !== -1);
-      });
-      // a first parent of a given item which has a given membership
-      if (parentWithMembership) {
-        const tree = traverse(processedLandscape);
-        let parentName;
-        tree.map(function(node) {
-          if (node && node.crunchbase === parentWithMembership) {
-            parentName = node.crunchbase_data.name
-          }
-        });
-        let myName =  item.crunchbaseData.name;
-        const membership = _.findKey(members, (v) => v && v.indexOf(parentWithMembership) !== -1);
-        console.info(`Assigning ${membership} membership on ${item.name} (${myName}) because its parent ${parentName} has ${membership} membership`);
-        return membership;
-      }
+      // const parentWithMembership = _.find(item.crunchbaseData.parents, function(parent) {
+      //   return _.findKey(members, (v) => v && v.indexOf(parent) !== -1);
+      // });
+      // // a first parent of a given item which has a given membership
+      // if (parentWithMembership) {
+      //   const tree = traverse(processedLandscape);
+      //   let parentName;
+      //   tree.map(function(node) {
+      //     if (node && node.crunchbase === parentWithMembership) {
+      //       parentName = node.crunchbase_data.name
+      //     }
+      //   });
+      //   let myName =  item.crunchbaseData.name;
+      //   const membership = _.findKey(members, (v) => v && v.indexOf(parentWithMembership) !== -1);
+      //   console.info(`Assigning ${membership} membership on ${item.name} (${myName}) because its parent ${parentName} has ${membership} membership`);
+      //   return membership;
+      // }
       return false;
     })();
     item.member = membership;
@@ -571,13 +571,13 @@ async function main () {
     .flatMap(({ children }) => children)
     .map(({ id }) => id)
 
-  itemsWithExtraFields.forEach(item => {
-    const { project, crunchbase, crunchbaseData, name } = item
-    const { parents } = crunchbaseData
-    if (hostedCategories.includes(project) && crunchbase !== settings.global.self && !parents.includes(settings.global.self)) {
-      failOnMultipleErrors(`Project ${name} has been added to ${project} category but does not belong to ${settings.global.short_name}`);
-    }
-  })
+  // itemsWithExtraFields.forEach(item => {
+  //   const { project, crunchbase, crunchbaseData, name } = item
+  //   const { parents } = crunchbaseData
+  //   if (hostedCategories.includes(project) && crunchbase !== settings.global.self && !parents.includes(settings.global.self)) {
+  //     failOnMultipleErrors(`Project ${name} has been added to ${project} category but does not belong to ${settings.global.short_name}`);
+  //   }
+  //})
 
   if (hasFatalErrors()) {
     process.exit(1);
@@ -640,7 +640,8 @@ async function main () {
 
   const generateHeadquarters = function() {
     const values = _.uniq(itemsWithExtraFields.map(function(item) {
-      return {headquarters: item.headquarters, country: item.crunchbaseData.country};
+      return "nomansland";
+      // return {headquarters: item.headquarters, country: item.crunchbaseData.country};
     }));
     const grouped  = _.groupBy(values, (x) => x.country);
     const keys = _.sortBy(_.keys(grouped), (country) => country === 'Antarctica' ? 'ZZZ' : country);
@@ -654,17 +655,17 @@ async function main () {
         level: 1,
         children: children.map( (x) => (x.headquarters))
       });
-      const stateAndCity = (x) => x.country === 'United States' ? x.headquarters.split(', ')[1] + x.headquarters.split(', ')[0] : x.headquarters.split(', ')[0];
-      _.each(_.orderBy(children,  (x) => stateAndCity(x) ), function(record) {
-        result.push({
-          id: record.headquarters,
-          label: record.country === 'United States' ? record.headquarters :  record.headquarters.split(', ')[0],
-          groupingLabel: record.headquarters,
-          url: saneName(record.headquarters),
-          level: 2,
-          parentId: key
-        });
-      });
+      // const stateAndCity = (x) => x.country === 'United States' ? x.headquarters.split(', ')[1] + x.headquarters.split(', ')[0] : x.headquarters.split(', ')[0];
+      // _.each(_.orderBy(children,  (x) => stateAndCity(x) ), function(record) {
+      //   result.push({
+      //     id: record.headquarters,
+      //     label: record.country === 'United States' ? record.headquarters :  record.headquarters.split(', ')[0],
+      //     groupingLabel: record.headquarters,
+      //     url: saneName(record.headquarters),
+      //     level: 2,
+      //     parentId: key
+      //   });
+      // });
     });
     return result;
   }
@@ -694,11 +695,11 @@ async function main () {
     }));
   };
 
-  const generateCrunchbaseSlugs = () => {
-    const urls = _.flatten(itemsWithExtraFields.map(({crunchbase, crunchbaseData}) => [crunchbase, ...crunchbaseData.parents || []]));
-    const slugs = urls.filter((url) => url).map((crunchbaseUrl) => crunchbaseUrl.split("/").pop());
-    return [...new Set(slugs)].sort()
-  }
+  // const generateCrunchbaseSlugs = () => {
+  //   const urls = _.flatten(itemsWithExtraFields.map(({crunchbase, crunchbaseData}) => [crunchbase, ...crunchbaseData.parents || []]));
+  //   const slugs = urls.filter((url) => url).map((crunchbaseUrl) => crunchbaseUrl.split("/").pop());
+  //   return [...new Set(slugs)].sort()
+  // }
 
   const generateLanguages = () => {
     const languages = _.flatten(itemsWithExtraFields.map(({github_data}) => ((github_data || {}).languages || []).map( (x) => encodeURIComponent(x.name) ) ));
@@ -727,7 +728,7 @@ async function main () {
     landscape: pack(generateLandscapeHierarchy()),
     license: pack(generateLicenses()),
     headquarters: pack(generateHeadquarters()),
-    crunchbaseSlugs: generateCrunchbaseSlugs(),
+//    crunchbaseSlugs: generateCrunchbaseSlugs(),
     languages: generateLanguages(),
     companyTypes: pack(generateCompanyTypes()),
     industries: pack(generateIndustries())
